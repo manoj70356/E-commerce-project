@@ -1,0 +1,22 @@
+<h1>Checkout</h1>
+<p>Price: ${{ total }}</p>
+<p>Tax: ${{ Tax }}</p>
+{% if discount %}
+<p class="text-success">Coupon Discount: -${{ discount }}</p>
+{% endif %}
+<h3>Total: ${{ grand_total }}</h3>
+{% if coupon_code %}
+<p style="color:green;">
+   Coupon "{{ coupon_code }}" applied successfully!
+</p>
+{% endif %}
+{% if cart_items and cart and cart.id %}
+<form action="{% url 'create_square_checkout' cart.id %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="final_amount" value="{{ grand_total }}">
+
+    <button type="submit">Pay Now</button>
+</form>
+{% else %}
+<p>Your cart is empty.</p>
+{% endif %}

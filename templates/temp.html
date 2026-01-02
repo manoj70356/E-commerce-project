@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkout Payment</title>
+    <script type="text/javascript" src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+</head>
+<body>
+    <h1>Pay ${{ grand_total }}</h1>
+    <div id="card-container"></div>
+    <button id="card-button">Pay</button>
+
+    <script>
+        const appId = "{{ SQUARE_APP_ID }}";
+        const locationId = "{{ SQUARE_LOCATION_ID }}";
+        const totalAmount = {{ grand_total|floatformat:2 }};
+
+        async function initializeCard() {
+            const payments = Square.payments(appId, locationId);
+            const card = await payments.card();
+            await card.attach("#card-container");
+
+            const button = document.getElementById("card-button");
+            button.addEventListener("click", async function () {
+                try {
+                    const result = await card.tokenize();
+                    if (result.status === "OK") {
+                        const token = result.token;
+                        const response = await fetch("{% url 'process_square_payment' %}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": "{{ csrf_token }}",
+                            },
+                            body: JSON.stringify({
+                                token: token,
+                                total: totalAmount
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.status === "success") {
+                            alert("Payment Successful! Order ID: " + data.order_id);
+                            window.location.href = "/orders/" + data.order_id + "/";
+                        } else {
+                            alert("Payment Failed: " + JSON.stringify(data.error));
+                        }
+                    } else {
+                        alert("Card tokenization failed: " + result.errors[0].message);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Payment error: " + error);
+                }
+            });
+        }
+
+        initializeCard();
+    </script>
+</body>
+</html>
+
+
+{% if products.has_previous %}
+<li class="prev-next">
+    <a href="?page={{ products.previous_page_number }}
+        {% if selected_category %}&category={{ selected_category }}{% endif %}
+        {% if min_price %}&min_price={{ min_price }}{% endif %}
+        {% if max_price %}&max_price={{ max_price }}{% endif %}
+        {% if date %}&date={{ date }}{% endif %}">
+        PREVIOUS
+    </a>
+</li>
+{% endif %}
+
+{% for i in products.paginator.page_range %}
+    {% if i <= 10 %}
+        {% if products.number == i %}
+            <li class="active"><span>{{ i }}</span></li>
+        {% else %}
+            <li>
+                <a href="?page={{ i }}
+                    {% if selected_category %}&category={{ selected_category }}{% endif %}
+                    {% if min_price %}&min_price={{ min_price }}{% endif %}
+                    {% if max_price %}&max_price={{ max_price }}{% endif %}
+                    {% if date %}&date={{ date }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{% if products.has_next %}
+<li class="prev-next">
+    <a href="?page={{ products.next_page_number }}
+        {% if selected_category %}&category={{ selected_category }}{% endif %}
+        {% if min_price %}&min_price={{ min_price }}{% endif %}
+        {% if max_price %}&max_price={{ max_price }}{% endif %}
+        {% if date %}&date={{ date }}{% endif %}">
+        NEXT
+    </a>
+</li>
+{% endif %}

@@ -1,0 +1,230 @@
+{% comment %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecommerce PToject</title>
+
+    <script type="text/javascript" src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+
+    <link rel="shortcut icon" href="static/images/favicon/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" />
+
+</head>
+
+<body>
+    <style>
+    .payment-wrapper {
+        max-width: 450px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0px 4px 18px rgba(0,0,0,0.1);
+    }
+
+    .payment-wrapper h2 {
+        text-align: center;
+        font-size: 26px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .payment-wrapper p {
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 25px;
+    }
+
+    #card-container {
+        margin: 20px 0;
+    }
+
+    #card-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        background: #ff4d4d;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #card-button:hover {
+        background: #e63e3e;
+    }
+    </style>
+
+    <!-- header -->
+    {% include "header.html" %}
+    <!-- ./header -->
+
+    <!-- navbar -->
+  
+    {% include "navbar.html" %}
+<div class="payment-wrapper">
+    <h2>Complete Payment</h2>
+    <p>Total Amount: <strong>${{ grand_total }}</strong></p>
+
+    <div id="card-container"></div>
+
+    <button id="card-button">Pay Now</button>
+</div>
+
+<script>
+    async function main() {
+        const payments = Square.payments("{{ SQUARE_APP_ID }}", "{{ SQUARE_LOCATION_ID }}");
+
+        const card = await payments.card();
+        await card.attach("#card-container");
+
+        const cardButton = document.getElementById("card-button");
+        cardButton.addEventListener("click", async () => {
+            cardButton.disabled = true;
+
+            const result = await card.tokenize();
+            if (result.status === "OK") {
+                sendPayment(result.token);
+            } else {
+                alert("Payment Failed!");
+                cardButton.disabled = false;
+            }
+        });
+    }
+    main();
+
+    function sendPayment(token) {
+        fetch("/process-square-payment/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                token: token,
+                total: "{{ grand_total }}"
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                window.location.href = "/order-success/" + data.order_id + "/";
+            } else {
+                alert("Error: " + JSON.stringify(data));
+            }
+        });
+    }
+</script>
+
+{% include "footer.html" %}
+
+</body>
+</html> {% endcomment %}
+
+
+
+{% comment %} <!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Payment Success</title></head>
+<body>
+  <h2>Payment Successful</h2>
+  {% if order %}
+    <p>Order #{{ order.id }} successful. Total: ${{ order.grand_total }}</p>
+  {% else %}
+    <p>Thank you for your payment.</p>
+  {% endif %}
+  <a href="/">Continue shopping</a>
+</body>
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Payment Success</title>
+  <style>
+    /* Center the content */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .payment-container {
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      text-align: center;
+      width: 350px;
+    }
+
+    .success-icon {
+      font-size: 50px;
+      color: #4BB543;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #333333;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555555;
+      margin: 10px 0;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4BB543;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+
+    a:hover {
+      background-color: #3a9a36;
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-container">
+    <div class="success-icon">✔</div>
+    <h2>Payment Successful</h2>
+    {% if order %}
+      <p><strong>Order ID:</strong> {{ order.id }}</p>
+      <p><strong>Total Paid:</strong> ${{ order.grand_total }}</p>
+      <p><strong>Items:</strong> 
+        {% for item in order.items.all %}
+          {{ item.product.product_name }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+    {% else %}
+      <p>Thank you for your payment.</p>
+    {% endif %}
+    <a href="/">Continue Shopping</a>
+  </div>
+</body>
+</html>

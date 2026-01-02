@@ -1,0 +1,351 @@
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Page - Ecommerce Tailwind</title>
+
+    <link rel="shortcut icon" href="{% static 'images/favicon/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+{% include "header.html" %}
+{% include "navbar.html" %}
+
+<!-- breadcrumb -->
+<div class="container py-4 flex items-center gap-3">
+    <a href="{% url 'index' %}" class="text-primary text-base">
+        <i class="fa-solid fa-house"></i>
+    </a>
+    <span class="text-sm text-gray-400">
+        <i class="fa-solid fa-chevron-right"></i>
+    </span>
+    <p class="text-gray-600 font-medium">Shop</p>
+</div>
+
+<!-- main wrapper -->
+{% comment %} <div class="container grid grid-cols-1 md:grid-cols-4 gap-6 pt-4 pb-16 items-start"> {% endcomment %}
+
+    <!-- ========== Sidebar Drawer Button (Mobile Only) ========== -->
+    <button data-drawer-target="drawer-example" data-drawer-show="drawer-example"
+        class="md:hidden px-4 py-2 bg-blue-600 text-white rounded-lg">
+        <ion-icon name="grid-outline"></ion-icon>
+    </button>
+
+    <!-- ========== Drawer Sidebar (Mobile version) ========== -->
+    <div id="drawer-example"
+        class="fixed top-0 left-0 z-40 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white w-80">
+        
+        <button data-drawer-hide="drawer-example" class="absolute top-2 right-3 text-gray-600 text-xl">
+            ✕
+        </button>
+
+        <h3 class="text-xl text-gray-800 mb-3 uppercase font-medium">Categories</h3>
+        <div class="space-y-2">
+            <div class="flex items-center">
+                <input type="checkbox">
+                <label class="ml-3">Bedroom</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox">
+                <label class="ml-3">Sofa</label>
+            </div>
+        </div>
+
+    </div>
+    <!-- END Drawer -->
+    <head>
+  <style>
+    /* Strong, local styles to override page defaults */
+    .filter-row {
+      display: flex !important;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap; /* allows wrapping on small screens */
+      margin-bottom: 12px;
+    }
+
+    /* Make inline-block just in case some global CSS forces block */
+    .filter-row > * {
+      display: inline-block !important;
+      vertical-align: middle;
+      margin: 0;
+    }
+
+    .filter-row select,
+    .filter-row input,
+    .filter-row button {
+      padding: 8px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      height: 38px;
+      box-sizing: border-box;
+      background: #fff;
+      color: #111;
+    }
+
+    .filter-row button {
+      background: #111;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Make sure option text visible */
+    .filter-row option { color: #111 !important; }
+
+    /* pagination simple styling */
+    .pagination {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pagination a { text-decoration: none; padding: 6px 10px; border:1px solid #ddd; border-radius:4px; }
+  </style>
+</head>
+
+<body>
+  <!-- FILTER FORM: method GET so filters appear in querystring -->
+  <form method="get" id="filterForm" class="filter-row">
+    <select name="category">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+          {{ cat.name|default:cat.slug }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <input type="number" name="min_price" placeholder="Min Price" value="{{ min_price }}" />
+    <input type="number" name="max_price" placeholder="Max Price" value="{{ max_price }}" />
+    <input type="date" name="date" value="{{ date }}" />
+
+    <button type="submit">Filter</button>
+  </form>
+
+  <!-- OPTIONAL: keep Enter-key UX -->
+  <script>
+    (function(){
+      const fields = Array.from(document.querySelectorAll('#filterForm select, #filterForm input'));
+      fields.forEach((f, i) => {
+        f.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const next = fields[i + 1];
+            if (next) { next.focus(); }
+            else { document.querySelector('#filterForm button[type="submit"]').focus(); }
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+
+    <!-- ========== Products Column ========== -->
+    <div class="col-span-3 w-full">
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            {% if products %}
+            {% for product in products %}
+            <div class="bg-white shadow rounded overflow-hidden group">
+
+                <div class="relative">
+                    <img src="{{ product.images.url }}" class="w-full h-56 object-cover">
+                    <div
+                        class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                        <a href="{{ product.get_url }}"
+                            class="text-white w-9 h-9 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="pt-4 pb-3 px-4">
+                    <a href="{{ product.get_url }}">
+                        <h4 class="uppercase font-medium text-xl text-gray-800 hover:text-primary">
+                            {{ product.product_name }}
+                        </h4>
+                    </a>
+
+                    <div class="flex items-baseline space-x-2">
+                        <p class="text-xl text-primary font-semibold">${{ product.price }}</p>
+                        <p class="text-sm text-gray-400 line-through">${{ product.old_price }}</p>
+                    </div>
+
+                    <div class="flex items-center">
+                        <div class="flex gap-1 text-yellow-400 text-sm">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div class="text-xs text-gray-500 ml-3">(150)</div>
+                    </div>
+                </div>
+
+                {% if product.stock <= 0 %}
+                <h4 class="text-red-600 text-center py-2">Out of Stock</h4>
+                {% else %}
+                <a href="{% url 'add_cart' product.id %}"
+                    class="block w-full py-2 text-center text-white bg-primary border border-primary rounded-b hover:bg-transparent hover:text-primary transition">
+                    Add to Cart
+                </a>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-span-4 text-center text-gray-600">
+                No results found.
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+
+    
+    <!--           pagination                 -->
+  
+    <div class="pagination-wrapper">
+        <ul class="pagination">
+            <!-- Previous Button -->
+            {% if products.has_previous %}
+            <li class="prev-next">
+                <a href="?page={{ products.previous_page_number }}&{{ query_string }}">
+                    PREVIOUS
+                </a>
+            </li>
+            {% endif %}
+             {% for i in products.paginator.page_range %}
+
+                {% if i >= products.number|add:'-2' and i <= products.number|add:'2' %}
+
+                    {% if products.number == i %}
+                        <li class="active">
+                            <span>{{ i }}</span>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="?page={{ i }}&{{ query_string }}">
+                                {{ i }}
+                            </a>
+                        </li> 
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if products.has_next %}
+            <li class="prev-next">
+                <a href="?page={{ products.next_page_number }}&{{ query_string }}">
+                    NEXT
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    <p class="mt-2" style="text-align: left;">
+        Page {{ products.number }} of {{ products.paginator.num_pages }}
+    </p>
+
+    <!-- END Products -->
+
+</div>
+
+{% include "footer.html" %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
+<script src="https://unpkg.com/ionicons@5.0.0/dist/ionicons.js"></script>
+
+</body>
+</html>
+<style>
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination {
+        display: flex;               /* ⭐ FIX: keeps items in 1 row */
+        align-items: center;
+    }
+
+    .pagination li {
+        list-style: none;
+        margin: 0 6px;               /* spacing */
+    }
+
+    .pagination a, 
+    .pagination span {
+        padding: 8px 14px;
+        border-radius: 50%;
+        text-decoration: none;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .pagination .active span {
+        background: #1a73e8;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .pagination .disabled span {
+        color: #ccc;
+    }
+
+    .pagination .prev-next a {
+        border-radius: 0;
+        color: #1a73e8;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+const inputs = document.querySelectorAll('#filterForm input, #filterForm select');
+
+inputs.forEach((input, i) => {
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // prevent form submission
+            const nextInput = inputs[i + 1];
+            if (nextInput) {
+                nextInput.focus();
+            } else {
+                document.querySelector('#filterForm button[type="submit"]').focus();
+            }
+        }
+    });
+});
+</script>
+<script>
+const fields = document.querySelectorAll('#filterForm input, #filterForm select');
+
+fields.forEach((field, i) => {
+    field.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const next = fields[i + 1];
+            if (next) {
+                next.focus();
+            } else {
+                document.querySelector('#filterForm button').focus();
+            }
+        }
+    });
+});
+</script>
+
+
+{% endblock %}

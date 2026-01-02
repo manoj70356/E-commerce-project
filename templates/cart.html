@@ -1,0 +1,392 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping Cart - Ecommerce</title>
+
+    <link rel="shortcut icon" href="{% static 'images/favicon/favicon.ico' %}" type="image/x-icon" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        /* Container for cart and summary */
+        .cart-container {
+            display: flex;
+            gap: 30px;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+        }
+
+        /* Cart items container - vertical stack */
+        .cart-items {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        /* Each product card flex row */
+        .cart-card {
+            width: 100%;
+            background: white;
+            box-shadow: 0 4px 10px rgb(0 0 0 / 0.1);
+            border-radius: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* Product image */
+        .cart-card img {
+            object-fit: cover;
+            width: 220px;
+            height: 160px;
+            border-radius: 10px;
+        }
+
+        /* Details area */
+        .cart-card-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .cart-card-body a {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e40af; /* Tailwind's blue-800 */
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .cart-card-body a:hover {
+            color: #2563eb; /* blue-600 */
+        }
+
+        .variations {
+            font-size: 14px;
+            color: #6b7280; /* gray-500 */
+        }
+
+        .price {
+            font-weight: 700;
+            font-size: 18px;
+            color: #111827; /* gray-900 */
+        }
+
+        /* Quantity and remove controls container */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        /* Quantity controls */
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-controls form button {
+            background-color: #047857;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .quantity-controls form button:hover {
+            background-color: #065f46;
+        }
+
+        /* Quantity input */
+        .quantity-controls input[type="text"] {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            padding: 6px;
+            font-size: 16px;
+            pointer-events: none; /* readonly */
+            background-color: #f9fafb;
+        }
+
+        /* Remove link */
+        .remove-link a {
+            color: #dc2626;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: text-decoration 0.3s;
+        }
+
+        .remove-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Cart summary */
+        .cart-summary {
+            flex-basis: 30%;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgb(0 0 0 / 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .cart-summary h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1e293b; /* slate-800 */
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 16px;
+            color: #334155; /* slate-700 */
+            margin-bottom: 15px;
+        }
+
+        .summary-total {
+            font-weight: 800;
+            font-size: 22px;
+            color: #0f172a; /* slate-900 */
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            font-weight: 600;
+            border: none;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        /* Payments image */
+        .payments img {
+            max-height: 30px;
+            margin: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+    {% include 'header.html' %}
+    {% include 'navbar.html' %}
+
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            {% if not cart_items %}
+            <div class="text-center py-20">
+                <h2 class="text-3xl font-semibold mb-6">Your Shopping Cart is Empty</h2>
+                <a href="{% url 'shop' %}" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"> Continue Shopping </a>
+            </div>
+            {% else %}
+            <div class="cart-container">
+                <!-- Cart Items -->
+                <div class="cart-items">
+                    {% for cart_item in cart_items %}
+                    <div class="cart-card">
+                        <img src="{{ cart_item.product.images.url }}" alt="{{ cart_item.product.product_name }}" />
+                        <div class="cart-card-body">
+                            <a href="{{ cart_item.product.get_url }}">{{ cart_item.product.product_name }}</a>
+                            <p class="variations">
+                                {% for item in cart_item.variations.all %}
+                                {{ item.variation_category|capfirst }}: {{ item.variation_value|capfirst }}{% if not forloop.last %},
+                                {% endif %}
+                                {% endfor %}
+                            </p>
+                            <p class="price">$ {{ cart_item.sub_total }}</p>
+                        </div>
+                        <div class="controls">
+                            <div class="quantity-controls">
+                                <form action="#" method="POST" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <a href="{% url 'remove_cart' cart_item.product.id %}" class="btn btn-light" type="button" id="button-plus"> <i class="fa fa-minus"></i> </a>
+                                </form>
+                                <input type="text" value="{{ cart_item.quantity }}" readonly /> 
+                                <form action="{% url 'add_cart' cart_item.product.id %}" method="POST" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit"><i class="fa fa-plus"></i></button>
+                                </form>
+                            </div>
+                            <div class="remove-link">
+                                <a href="{% url 'remove_cart_item' cart_item.product.id %}">Remove</a>
+                            </div> 
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Cart Summary -->
+                <!-- Checkout Section -->
+                <!-- Checkout Section -->
+                <div class="max-w-md mx-auto bg-white shadow-lg rounded-2xl p-6 mt-8">
+                    
+                    <!-- Inline CSS for Buttons -->
+                    <style>
+                        .btn-apply {
+                            background-color: #3b82f6; /* Blue */
+                            color: white;
+                            padding: 0.5rem 1rem;
+                            border-radius: 0.5rem;
+                            font-weight: 600;
+                            transition: background-color 0.3s;
+                            border: none;
+                            cursor: pointer;
+                        }
+                        .btn-apply:hover {
+                            background-color: #2563eb;
+                        }
+                        .btn-checkout {
+                            background-color: #16a34a; /* Green */
+                            color: white;
+                            padding: 0.75rem 1rem;
+                            border-radius: 0.75rem;
+                            font-weight: 600;
+                            transition: background-color 0.3s;
+                            border: none;
+                            cursor: pointer;
+                            width: 100%;
+                        }
+                        .btn-checkout:hover {
+                            background-color: #15803d;
+                        }
+                    </style>
+
+                    <!-- Order Summary -->
+                    <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+                    <div class="mb-4">
+                        <div class="flex justify-between border-b pb-2">
+                            <span>Price:</span>
+                            <span>$ {{ total }}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>Tax:</span>
+                            <span>$ {{ Tax }}</span>
+                        </div>
+                        {% if discount %}
+                        <div class="flex justify-between border-b pb-2 text-green-600">
+                            <span>Coupon Discount:</span>
+                            <span>- $ {{ discount }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between font-bold pt-2">
+                            <span>Total:</span>
+                            <span>$ {{ grand_total|default:total }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Coupon Section -->
+                    {% comment %} <div class="coupon-section mb-4">
+                        {% if not coupon_code %}
+                        <form method="POST" action="{% url 'apply_coupon' %}" class="flex gap-2">
+                            {% csrf_token %}
+                            <input 
+                                type="text" 
+                                name="coupon_code" 
+                                placeholder="Enter coupon code" 
+                                class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                            <button type="submit" class="btn-apply">Apply</button>
+                        </form>
+                        {% else %}
+                        <div class="text-green-600 font-semibold">
+                            Coupon "{{ coupon_code }}" applied successfully!
+                        </div>
+                        {% endif %}
+                        {% include "alert.html" %}
+                    </div> {% endcomment %}
+                    <div class="coupon-section mb-4">
+                        {% if not coupon_code %}
+                        <form method="POST" action="{% url 'apply_coupon' %}" class="flex gap-2">
+                            {% csrf_token %}
+                            <input 
+                                type="text" 
+                                name="coupon_code" 
+                                placeholder="Enter coupon code" 
+                                class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                            <button type="submit" class="btn-apply">Apply</button>
+                        </form>
+                        {% else %}
+                        <div class="text-green-600 font-semibold">
+                            Coupon "{{ coupon_code }}" applied successfully!
+                        </div>
+                        {% endif %}
+
+                        {% include "alert.html" %}
+                    </div>
+
+
+                    <!-- Checkout Button -->
+                    <div class="checkout-section">
+                        <form method="POST" action="{% url 'checkout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-checkout">Checkout</button>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+            {% endif %}
+        </div>
+
+    </section>
+
+    {% include "footer.html" %}
+</body>
+
+</html>
