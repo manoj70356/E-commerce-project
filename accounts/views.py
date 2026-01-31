@@ -171,36 +171,3 @@ def resetPassword(request):
    else:
     return render(request, 'resetPassword.html')
    
-
-# from django.shortcuts import render, redirect
-# from .models import Checkout
-
-# def checkout_page(request):
-#     if request.method == "POST":
-#         Checkout.objects.create(
-#             first_name = request.POST.get("first-name"),
-#             last_name = request.POST.get("last-name"),
-#             region = request.POST.get("region"),
-#             address = request.POST.get("address"),
-#             city = request.POST.get("city"),
-#             phone = request.POST.get("phone"),
-#             email = request.POST.get("email"),
-#         )
-#         return redirect("success")  # success page
-
-#     return render(request, "checkout.html")
-
-
-# from django.db import models
-
-# class Checkout(models.Model):
-#     first_name = models.CharField(max_length=100)
-#     last_name = models.CharField(max_length=100)
-#     region = models.CharField(max_length=100, blank=True)
-#     address = models.CharField(max_length=255)
-#     city = models.CharField(max_length=100)
-#     phone = models.CharField(max_length=15)
-#     email = models.EmailField()
-
-#     def __str__(self):
-#         return self.first_name
